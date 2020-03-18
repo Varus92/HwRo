@@ -15,11 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\att48.tsp">
-      <Filter>File di origine</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\chrono.c">
       <Filter>File di origine</Filter>
     </ClCompile>
@@ -34,5 +29,10 @@
     <ClInclude Include="..\Tsp.h">
       <Filter>File di origine</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="att48.tsp">
+      <Filter>File di origine</Filter>
+    </None>
   </ItemGroup>
 </Project>

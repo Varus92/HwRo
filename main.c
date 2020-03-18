@@ -11,7 +11,7 @@ void parse_command_line(int argc, char** argv, instance *inst);
 
 void print_error(const char *err)
 {
-    printf("/n debug: %s /n", err);
+    printf("\n debug: %s \n", err);
     fflush(NULL);
 }
 
@@ -28,7 +28,7 @@ int main (int argc, char **argv)
 {
     if(argc <2)
     {
-        printf("Argomenti passati da input errati: %s \n", argv[0]);
+        printf("\nArgomenti passati da input errati: %s \n", argv[0]);
         exit(1);
     }
 
@@ -47,11 +47,11 @@ int main (int argc, char **argv)
 	
     read_input(&inst);
 		
-	for (int i = 0; i < inst.nnodes-1; ++i) 
+	for (int i = 0; i < inst.nnodes; ++i) 
 	{
-		printf("nodo %p)", &inst.nnodes);
-		printf("x=%p\n", &inst.xcoord[i+1]);
-		printf("y=%p\n", &inst.ycoord[i+1]);
+		printf("\nnodo %2d ) ", i+1);
+		printf("x=%15.7lf - ", inst.xcoord[i]);
+		printf("y=%15.7lf", inst.ycoord[i]);
 	}
 
 	
@@ -81,16 +81,10 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 
 	int do_print = (VERBOSE >= 1000);
 
-	printf("Fuori WhileSono quiiiiiiiiiiiiiiiiiiiiii\n");
 	
-	/*if(fgets(line, sizeof(line), fin) == NULL) 
-	{ printf("sono NULL"); 
-	}*/
-
-
 	while (fgets(line, sizeof(line), fin) != NULL)
 	{
-		printf("Dentro While sono QUi\n");
+		
 		
 		if (VERBOSE >= 2000)
 		{ 
@@ -161,7 +155,7 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 
 		if (strncmp(par_name, "EDGE_WEIGHT_TYPE", 16) == 0)
 		{
-			token1 = strto_s(NULL, " :");
+			token1 = strtok(NULL, " :");
 			if (strncmp(token1, "EUC_2D", 6) != 0) print_error(" format error:  only EDGE_WEIGHT_TYPE == EUC_2D implemented so far!!!!!!");
 			active_section = 0;
 			continue;
@@ -249,14 +243,6 @@ void parse_command_line(int argc, char** argv, instance* inst)
 		if (strcmp(argv[i], "-input") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 			// input file
 		if (strcmp(argv[i], "-f") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 				// input file
 		
-		if (strcmp(argv[i], "-model_type") == 0) { inst->model_type = atoi(argv[++i]); continue; } 	// model type
-		if (strcmp(argv[i], "-model") == 0) { inst->model_type = atoi(argv[++i]); continue; } 			// model type
-		if (strcmp(argv[i], "-memory") == 0) { inst->available_memory = atoi(argv[++i]); continue; }	// available memory (in MB)
-		if (strcmp(argv[i], "-node_file") == 0) { strcpy(inst->node_file, argv[++i]); continue; }		// cplex's node file
-		if (strcmp(argv[i], "-max_nodes") == 0) { inst->max_nodes = atoi(argv[++i]); continue; } 		// max n. of nodes
-		if (strcmp(argv[i], "-int") == 0) { inst->integer_costs = 1; continue; } 						// inteher costs
-		if (strcmp(argv[i], "-help") == 0) { help = 1; continue; } 									// help
-		if (strcmp(argv[i], "--help") == 0) { help = 1; continue; } 									// help
 		help = 1;
 	}
 
@@ -264,17 +250,10 @@ void parse_command_line(int argc, char** argv, instance* inst)
 	{
 		printf("\n\navailable parameters (vers. 16-may-2015) --------------------------------------------------\n");
 		printf("-file %s\n", inst->input_file);
-		
-		printf("-model_type %d\n", inst->model_type);
-		printf("-max_nodes %d\n", inst->max_nodes);
-		printf("-memory %d\n", inst->available_memory);
-		printf("-int %d\n", inst->integer_costs);
-		printf("-node_file %s\n", inst->node_file);
-		printf("\nenter -help or --help for help\n");
 		printf("----------------------------------------------------------------------------------------------\n\n");
 	}
 
-	//if (help) exit(1);
+	if (help) exit(1);
 	
 
 }
