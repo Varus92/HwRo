@@ -149,6 +149,12 @@
     <ClInclude Include="..\Tsp.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\LaTex RO2\chapters\introduzione.tex" />
+    <None Include="..\LaTex RO2\main.pdf" />
+    <None Include="..\LaTex RO2\main.synctex.gz" />
+    <None Include="..\LaTex RO2\main.tex" />
+    <None Include="..\LaTex RO2\preamble.sty" />
+    <None Include="..\LaTex RO2\title.tex" />
     <None Include="att48.tsp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

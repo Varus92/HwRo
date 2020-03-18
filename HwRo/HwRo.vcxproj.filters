@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Latex">
+      <UniqueIdentifier>{73678231-fc49-4ae3-b180-94b1506fd262}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Latex\chapters">
+      <UniqueIdentifier>{24ccb5ce-9956-4deb-b363-f6554e5bece5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\chrono.c">
@@ -33,6 +39,24 @@
   <ItemGroup>
     <None Include="att48.tsp">
       <Filter>File di origine</Filter>
+    </None>
+    <None Include="..\LaTex RO2\main.pdf">
+      <Filter>Latex</Filter>
+    </None>
+    <None Include="..\LaTex RO2\main.synctex.gz">
+      <Filter>Latex</Filter>
+    </None>
+    <None Include="..\LaTex RO2\main.tex">
+      <Filter>Latex</Filter>
+    </None>
+    <None Include="..\LaTex RO2\preamble.sty">
+      <Filter>Latex</Filter>
+    </None>
+    <None Include="..\LaTex RO2\title.tex">
+      <Filter>Latex</Filter>
+    </None>
+    <None Include="..\LaTex RO2\chapters\introduzione.tex">
+      <Filter>Latex\chapters</Filter>
     </None>
   </ItemGroup>
 </Project>

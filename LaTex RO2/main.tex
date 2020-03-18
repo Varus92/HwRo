@@ -1,0 +1,29 @@
+\documentclass[a4paper,11pt,oneside]{book}
+
+\usepackage{preamble}
+
+\begin{document}
+
+% define layers for pgf magic
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+
+\frontmatter
+
+\import{./}{title.tex}
+
+\tableofcontents
+
+\mainmatter
+
+% \pagestyle{fancy}
+
+
+\chapter{introduzione}
+\import{chapters/}{introduzione.tex}
+
+
+\cleardoublepage
+
+
+\end{document}

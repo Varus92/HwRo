@@ -1,0 +1,181 @@
+\ProvidesPackage{preamble}
+
+%%%%% PACCHETTI %%%%%
+
+% to have precise relative import with \import{chapters/}{intro.tex}
+\usepackage{import}
+
+% setup input and allow italian
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+
+% setup bibliography
+% \usepackage[
+    % backend=biber,
+    % style=alphabetic,
+    % sorting=ynt,
+% ]{biblatex}
+\usepackage[nottoc]{tocbibind}	% to generate Bibliography entry in toc
+% mah https://tex.stackexchange.com/a/71153
+% sorting order https://tex.stackexchange.com/a/51439
+% year name title
+% \addbibresource{biblio.bib}
+
+\usepackage{amsmath,amssymb,amsfonts,amsthm} % standard math magic
+\usepackage{mathrsfs} % for fancy mathscr symbols
+\usepackage{bm}
+\allowdisplaybreaks % allow breaking equations over pages tex.stackexchange.com/a/431236
+\usepackage{cases} % numbering eq inside case env
+\usepackage{upquote} % display '` in verbatim
+\usepackage{cancel} % to cross out a letter
+\usepackage{mathtools} % to use shortintertext
+
+
+% setup geometry of the page, header/footer, and lists
+\usepackage[top=3cm, bottom=3cm, heightrounded, marginparwidth=2.5cm, marginparsep=1.5cm]{geometry}
+\usepackage{enumitem} % more control over lists: stackoverflow.com/a/4974583
+\usepackage{indentfirst} % YES indent after section/chapter heading
+\usepackage{fancyhdr}
+\makeatletter 
+\pagestyle{fancy}
+\lhead{\@title}
+\chead{}
+\rhead{}
+\lfoot{Capitolo \thechapter}
+% my name in E V E R Y page seems a bit much
+% \cfoot{\@author}
+\cfoot{}
+\rfoot{\thepage}
+\makeatother 
+
+% standard filler text
+\usepackage{lipsum}
+
+% setup algorithms
+\usepackage[Algoritmo]{algorithm}
+\usepackage[noend]{algpseudocode} % algoritmi decenti, senza end
+
+% graphics and images
+% \usepackage{graphicx}
+% \graphicspath{ {images/} }
+% per poter usare subfigure devi importare questo package
+\usepackage{subcaption}
+
+\usepackage{tikz} % for tikzpicture
+\usetikzlibrary{shapes} % node shapes
+\usepackage{pgfplots} % for plots inside tikz
+
+% some say this should be the last package added...
+\usepackage{hyperref}	% enable hyperlinks to referenced elements
+\hypersetup{
+	colorlinks=true,
+	linkcolor=cyan,
+	citecolor=cyan,
+    linkcolor=cyan,
+    filecolor=magenta,
+    urlcolor=blue,
+}
+\urlstyle{same}
+
+%%%%% COMANDI %%%%%
+
+\newcommand{\bpi}{\bm{\Pi}}
+% \newcommand{\bi}{I}
+\newcommand{\bi}{\mathcal{I}}
+\newcommand{\bs}{\mathcal{S}}
+\newcommand{\bd}{\mathcal{D}}
+\newcommand{\bff}{\mathcal{F}}
+\newcommand{\bw}{\bm{W}}
+\newcommand{\bp}{\bm{P}}
+\newcommand{\bnp}{\bm{NP}}
+\newcommand{\bnpc}{\bm{NPC}}
+\newcommand{\bnph}{\bm{NPH}}
+\newcommand{\bconp}{\bm{Co-NP}}
+
+\newcommand{\mleq}{\overset{?}{\leq}}
+\newcommand{\mgeq}{\overset{?}{\geq}}
+\newcommand{\mles}{\overset{?}{<}}
+\newcommand{\mges}{\overset{?}{>}}
+\newcommand{\meq}{\overset{?}{=}}
+
+\newcommand{\lp}{<_P}
+\newcommand{\pt}{+_t}
+
+\newcommand{\setzo}[1]{\left\{0,1\right\}^{#1}}
+
+\newcommand{\E}[1]{\mathbb{E}\left[#1\right]}
+\newcommand{\zz}[1]{\mathbb{Z}_{#1}}
+\newcommand{\zs}[1]{\mathbb{Z}_{#1}^{*}}
+\newcommand{\zp}[1]{\mathbb{Z}_{#1}^{+}}
+\newcommand{\cleq}[2]{\left[\,#2\,\right]_{#1}}
+% \newcommand{\cln}[1]{\left[\,#1\,\right]_{n}}
+\newcommand{\cln}[1]{\cleq{n}{#1}}
+\newcommand{\bgg}{\mathscr{G}}
+\newcommand{\mincut}{min{\text -}cut}
+\newcommand{\prob}[1]{Pr\left(#1\right)}
+
+% this is black magic https://tex.stackexchange.com/a/252655
+% multisets https://tex.stackexchange.com/a/318144
+\newcommand*{\ldblbrace}{\{\mskip-5mu\{}
+\newcommand*{\rdblbrace}{\}\mskip-5mu\}}
+\newcommand*{\ldblbraceb}{\big\{\mskip-5mu\big\{}
+\newcommand*{\rdblbraceb}{\big\}\mskip-5mu\big\}}
+\newcommand*{\ldblbraceB}{\Big\{\mskip-5mu\Big\{}
+\newcommand*{\rdblbraceB}{\Big\}\mskip-5mu\Big\}}
+\newcommand*{\ldblbracebb}{\bigg\{\mskip-5mu\bigg\{}
+\newcommand*{\rdblbracebb}{\bigg\}\mskip-5mu\bigg\}}
+\newcommand*{\ldblbraceBB}{\Bigg\{\mskip-5mu\Bigg\{}
+\newcommand*{\rdblbraceBB}{\Bigg\}\mskip-5mu\Bigg\}}
+
+% put text inside a circle
+\newcommand{\circola}[1]{\mbox{\textcircled{\footnotesize #1}}}
+% and put it above an equal sign
+\newcommand{\labeq}[1]{\overset{\circola{#1}}{=}}
+
+\newcommand{\rfig}[1]{Figura~\ref{#1}}
+
+% numerazione sana degli algoritmi
+\renewcommand{\thealgorithm}{\arabic{chapter}.\arabic{algorithm}} 
+
+% loop to repeat n times https://tex.stackexchange.com/a/115509
+% \algdef{SE}{RepLoop}{EndRepLoop}[1]{\textbf{repeat} \(\mbox{#1}\) \textbf{times}}{\textbf{end}}%
+\algdef{SN}{RepLoop}{EndRepLoop}[1]{\textbf{repeat} \(\mbox{#1}\) \textbf{times}}%
+
+%% MATH OPERATORS %%
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\divv}{div}
+
+%% CUSTOM THEOREM/DEF %%
+% https://www.overleaf.com/learn/latex/Theorems_and_proofs
+
+% DEFINITION
+\theoremstyle{definition}
+\newtheorem{definition/}{Definizione}[section]
+% magic for marking the end of the definitions
+% https://tex.stackexchange.com/a/292371
+\newenvironment{definition}
+  % {\renewcommand{\qedsymbol}{$\blacksquare$}%
+  {\renewcommand{\qedsymbol}{$\square$}%
+   \pushQED{\qed}\begin{definition/}}
+  {\popQED\end{definition/}}
+
+% THEOREM
+
+% the theorem counter resets with the section
+\theoremstyle{plain}
+\newtheorem{theorem}{Teorema}[section]
+
+% the lemma uses the same counter as theorem
+\theoremstyle{plain}
+\newtheorem{lemma}[theorem]{Lemma}
+
+% the corollary counter resets at each theorem
+\theoremstyle{plain}
+\newtheorem{corollario}{Corollario}[theorem]
+
+% the proposizione uses the same counter as theorem
+\theoremstyle{plain}
+\newtheorem{proposizione}[theorem]{Proposizione}
+
