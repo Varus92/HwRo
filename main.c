@@ -8,7 +8,6 @@
 void read_input(instance *inst);
 void parse_command_line(int argc, char** argv, instance *inst);
 
-
 void print_error(const char *err)
 {
     printf("\n debug: %s \n", err);
@@ -26,7 +25,8 @@ void free_instance(instance *inst)
 
 int main (int argc, char **argv)
 {
-    if(argc <2)
+   
+	if(argc <2)
     {
         printf("\nArgomenti passati da input errati: %s \n", argv[0]);
         exit(1);
@@ -44,8 +44,7 @@ int main (int argc, char **argv)
     instance inst;
 	
     parse_command_line(argc, argv, &inst);
-	
-    read_input(&inst);
+	read_input(&inst);
 		
 	for (int i = 0; i < inst.nnodes; ++i) 
 	{
@@ -53,16 +52,16 @@ int main (int argc, char **argv)
 		printf("x=%15.7lf - ", inst.xcoord[i]);
 		printf("y=%15.7lf", inst.ycoord[i]);
 	}
-
-	
+		
     free_instance(&inst);
 
     return 0;
-
 }
 
 void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs detected  
 {
+	int active_section = 0;
+
 	printf("file : %s", inst->input_file);
 
 	FILE* fin = fopen(inst->input_file, "r");
@@ -77,25 +76,24 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 	char *token1;
 	char *token2;
 
-	int active_section = 0; // =1 NODE_COORD_SECTION, =2 DEMAND_SECTION, =3 DEPOT_SECTION 
-
 	int do_print = (VERBOSE >= 1000);
 
-	
 	while (fgets(line, sizeof(line), fin) != NULL)
 	{
-		
-		
+			
 		if (VERBOSE >= 2000)
 		{ 
 			printf("%s", line); fflush(NULL);
 		}
+
 		if (strlen(line) <= 1) continue; // skip empty lines
 		
 		par_name = strtok(line, " :");
 		
 		if (VERBOSE >= 3000) 
-		{ printf("parameter \"%s\" ", par_name); fflush(NULL); }
+		{ 
+			printf("parameter \"%s\" ", par_name); fflush(NULL); 
+		}
 
 		if (strncmp(par_name, "NAME", 4) == 0)
 		{
@@ -214,7 +212,6 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 	}
 
 	fclose(fin);
-
 }
 
 void parse_command_line(int argc, char** argv, instance* inst)
@@ -224,8 +221,8 @@ void parse_command_line(int argc, char** argv, instance* inst)
 	{
 		printf(" running %s with %d parameters \n", argv[0], argc - 1);
 	}
-	// default   
-	inst->model_type = 0;
+	 
+	inst->model_type = 0;						// default  
 
 	strcpy(inst->input_file, "NULL");
 	
@@ -235,7 +232,9 @@ void parse_command_line(int argc, char** argv, instance* inst)
 	
 	inst->max_nodes = -1; 						// max n. of branching nodes in the final run (-1 unlimited)        
 
-	int help = 0; if (argc < 1) help = 1;
+	int help = 0; 
+	
+	if (argc < 1) help = 1;
 
 	for (int i = 1; i < argc; i++)
 	{
