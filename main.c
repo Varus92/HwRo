@@ -3,10 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> 
+#include<ilcplex/cplex.h>
+#include<gnuplot_c.h>
+
 
 
 void read_input(instance *inst);
 void parse_command_line(int argc, char** argv, instance *inst);
+
+void print_graph(instance* inst);
 
 void print_error(const char *err)
 {
@@ -45,6 +50,8 @@ int main (int argc, char **argv)
 	
     parse_command_line(argc, argv, &inst);
 	read_input(&inst);
+	
+	if (TSPopt(&inst)) print_error(" error within TSPopt()");
 		
 	for (int i = 0; i < inst.nnodes; ++i) 
 	{
@@ -52,8 +59,22 @@ int main (int argc, char **argv)
 		printf("x=%15.7lf - ", inst.xcoord[i]);
 		printf("y=%15.7lf", inst.ycoord[i]);
 	}
+
+	print_graph(&inst);
+
+	/*
+	h_GPC_Plot* plotter;
+	
+	//plotter = gpc_init_xy("Best solution", "X coord", "Y coord",GPC_AUTO_SCALE, GPC_KEY_DISABLE);
+	plotter = gpc_init_xy("solution", (char)*inst.xcoord, (char)*inst.ycoord, GPC_AUTO_SCALE, GPC_KEY_DISABLE);
+
 		
-    free_instance(&inst);
+	//system("gnuplot > pl 'att48.tsp' using 2:3");
+	gpc_close(plotter);
+	*/
+    
+	
+	free_instance(&inst);
 
     return 0;
 }
@@ -214,6 +235,63 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 	fclose(fin);
 }
 
+void print_graph(instance *inst) {
+
+	h_GPC_Plot* plotter;
+	plotter = gpc_init_xy("Best solution", "X coord", "Y coord",GPC_AUTO_SCALE, GPC_KEY_DISABLE);
+
+	if (plotter == NULL)                       // Plot creation failed - e.g is server running ?
+	{
+		printf("\nPlot creation failure. Please ensure gnuplot is located on your system path\n");
+		exit(1);
+	}
+
+	int sample_lenght = inst->nnodes;
+
+	typedef struct // Complex data type
+	{
+		double real;
+		double imag;
+	} ComplexRect_s;
+
+	ComplexRect_s CArray[48];
+
+	for (int j = 0; j < sample_lenght; j++)         // Plot a number of arrays
+	{
+		for (int i = 0; i < sample_lenght; i++)             // Fill the array
+		{
+			CArray[i].real = inst->xcoord[i];
+			CArray[i].imag = inst->ycoord[i];
+		}
+
+		if (j == 0)
+		{
+			gpc_plot_xy(plotter,                     // Plot handle
+				CArray,                    // Dataset
+				sample_lenght,                 // Number of data points
+				"Data graph",                // Dataset title
+				"points",                  // Plot type
+				"black",                 // Colour
+				GPC_NEW);                  // New plot
+		}
+		else
+		{
+			gpc_plot_xy(plotter,              // Plot handle
+				CArray,                 // Dataset
+				sample_lenght,         // Number of data points
+				"Data graph",            // Dataset title
+				"points",               // Plot type
+				"black",         // Colour
+				GPC_ADD);              // Add plot
+		}
+	}
+
+
+	gpc_close(plotter);
+
+
+}
+
 void parse_command_line(int argc, char** argv, instance* inst)
 {
 	
@@ -256,6 +334,8 @@ void parse_command_line(int argc, char** argv, instance* inst)
 	
 
 }
+
+
 
 
 

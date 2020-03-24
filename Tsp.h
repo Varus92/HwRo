@@ -1,7 +1,7 @@
 #ifndef TSP_H
 #define TSP_H
 
-//#include <cplex.h>
+#include <ilcplex/cplex.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
