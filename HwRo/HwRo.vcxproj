@@ -105,13 +105,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;IL_STD;_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files\gnuplot\bin;C:\DEV\gnuplot_c\src;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\concert\include;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\cplex\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\DEV\gnuplot_c\src;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\concert\include;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\cplex\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Program Files\gnuplot\bin;C:\DEV\gnuplot_c\src;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\concert\lib\x64_windows_msvc14\stat_mda;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\cplex\lib\x64_windows_msvc14\stat_mda;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cplex12100.lib;ilocplex.lib;concert.lib;gnuplot_c.h;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\DEV\gnuplot_c\src;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\concert\lib\x64_windows_msvc14\stat_mda;C:\Program Files\IBM\ILOG\CPLEX_Studio1210\cplex\lib\x64_windows_msvc14\stat_mda;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cplex12100.lib;ilocplex.lib;concert.lib;gnuplot_c.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -154,11 +154,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\chrono.c" />
-    <ClCompile Include="..\main.c" />
-    <ClCompile Include="..\Tsp.c" />
+    <ClCompile Include="..\mainf.c" />
+    <ClCompile Include="..\Tspf.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Tsp.h" />
+    <ClInclude Include="..\Tspf.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LaTex RO2\chapters\introduzione.tex" />

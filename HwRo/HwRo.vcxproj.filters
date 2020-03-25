@@ -24,17 +24,12 @@
     <ClCompile Include="..\chrono.c">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="..\main.c">
+    <ClCompile Include="..\Tspf.c">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="..\Tsp.c">
+    <ClCompile Include="..\mainf.c">
       <Filter>File di origine</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\Tsp.h">
-      <Filter>File di origine</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="att48.tsp">
@@ -58,5 +53,10 @@
     <None Include="..\LaTex RO2\chapters\introduzione.tex">
       <Filter>Latex\chapters</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Tspf.h">
+      <Filter>File di origine</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

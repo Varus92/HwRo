@@ -1,4 +1,4 @@
-#include "Tsp.h"
+#include "Tspf.h"
 void build_model(instance* inst, CPXENVptr env, CPXLPptr lp);
 int xpos(int i, int j, instance* inst) 
 {

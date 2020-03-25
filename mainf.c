@@ -1,4 +1,4 @@
-#include "Tsp.h"
+#include "Tspf.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,10 +7,8 @@
 #include<gnuplot_c.h>
 
 
-
 void read_input(instance *inst);
 void parse_command_line(int argc, char** argv, instance *inst);
-
 void print_graph(instance* inst);
 
 void print_error(const char *err)
@@ -237,16 +235,18 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 
 void print_graph(instance *inst) {
 
+	int SAMPLE_LENGTH = inst->nnodes;
+	
+	printf("\ninizio graph");
+
 	h_GPC_Plot* plotter;
 	plotter = gpc_init_xy("Best solution", "X coord", "Y coord",GPC_AUTO_SCALE, GPC_KEY_DISABLE);
-
+	
 	if (plotter == NULL)                       // Plot creation failed - e.g is server running ?
 	{
 		printf("\nPlot creation failure. Please ensure gnuplot is located on your system path\n");
 		exit(1);
 	}
-
-	int sample_lenght = inst->nnodes;
 
 	typedef struct // Complex data type
 	{
@@ -256,39 +256,39 @@ void print_graph(instance *inst) {
 
 	ComplexRect_s CArray[48];
 
-	for (int j = 0; j < sample_lenght; j++)         // Plot a number of arrays
+	for (int j = 0; j < SAMPLE_LENGTH; j++)         // Plot a number of arrays
 	{
-		for (int i = 0; i < sample_lenght; i++)             // Fill the array
+		for (int i = 0; i < SAMPLE_LENGTH; i++)             // Fill the array
 		{
 			CArray[i].real = inst->xcoord[i];
 			CArray[i].imag = inst->ycoord[i];
 		}
-
-		if (j == 0)
-		{
-			gpc_plot_xy(plotter,                     // Plot handle
-				CArray,                    // Dataset
-				sample_lenght,                 // Number of data points
-				"Data graph",                // Dataset title
-				"points",                  // Plot type
-				"black",                 // Colour
-				GPC_NEW);                  // New plot
-		}
-		else
-		{
-			gpc_plot_xy(plotter,              // Plot handle
-				CArray,                 // Dataset
-				sample_lenght,         // Number of data points
-				"Data graph",            // Dataset title
-				"points",               // Plot type
-				"black",         // Colour
-				GPC_ADD);              // Add plot
-		}
 	}
-
-
+	//Stampa i punti in rosso		
+		gpc_plot_xy(plotter,                     // Plot handle
+					CArray,                    // Dataset
+					SAMPLE_LENGTH,                 // Number of data points
+					"Data graph",                // Dataset title
+					"point",                  // Plot type
+					"red",                 // Colour
+					GPC_NEW);                 // New plot
+		
+		
+	//Stampa i collegamenti tra i vari punti successivi
+		gpc_plot_xy(plotter,              // Plot handle
+					CArray,                 // Dataset
+					SAMPLE_LENGTH,         // Number of data points
+					"Data graph",            // Dataset title
+					"lines",               // Plot type
+					"blue",         // Colour
+					GPC_ADD); 
+	getchar();
+	
 	gpc_close(plotter);
 
+	printf("\nclose graph");
+	
+	return 0;
 
 }
 
