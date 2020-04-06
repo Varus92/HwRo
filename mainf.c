@@ -1,80 +1,62 @@
-#include "Tspf.h"
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h> 
-#include<ilcplex/cplex.h>
-#include<gnuplot_c.h>
+#include <stdio.h>
+#include <string.h>
 
+#include "Tspf.h"
+#include "build_model_2.h"
 
-void read_input(instance *inst);
-void parse_command_line(int argc, char** argv, instance *inst);
-void print_graph(instance* inst);
+#pragma warning(disable : 4996)
 
-void print_error(const char *err)
+void read_input(instance* inst);
+void parse_command_line(int argc, char** argv, instance* inst);
+void free_instance(instance* inst);
+
+int main(int argc, char** argv)
 {
-    printf("\n debug: %s \n", err);
-    fflush(NULL);
-}
+	printf("Hello world!\n");
 
+	if (argc < 2)
+	{
+		printf("\nArgomenti passati da input errati: %s \n", argv[0]);
+		exit(1);
+	}
 
-void free_instance(instance *inst)
-{
-	free(inst->demand);
-	free(inst->xcoord);
-	free(inst->ycoord);
-	
-}
+	if (VERBOSE >= 2)
+	{
+		for (int a = 0; a < argc; ++a)
+		{
+			printf("%s", argv[a]);
+			printf("\n");
+		}
+	}
 
-int main (int argc, char **argv)
-{
-   
-	if(argc <2)
-    {
-        printf("\nArgomenti passati da input errati: %s \n", argv[0]);
-        exit(1);
-    }
+	instance inst;
 
-    if (VERBOSE >=2)
-    {
-        for(int a=0; a<argc; ++a)
-        {
-            printf("%s", argv[a]);
-            printf("\n");
-        }
-    }
-
-    instance inst;
-	
-    parse_command_line(argc, argv, &inst);
+	parse_command_line(argc, argv, &inst);
 	read_input(&inst);
 	
-	if (TSPopt(&inst)) print_error(" error within TSPopt()");
-		
-	for (int i = 0; i < inst.nnodes; ++i) 
+	//stampa input
+	for (int i = 0; i < inst.nnodes; ++i)
 	{
-		printf("\nnodo %2d ) ", i+1);
+		printf("\nnodo %2d ) ", i + 1);
 		printf("x=%15.7lf - ", inst.xcoord[i]);
 		printf("y=%15.7lf", inst.ycoord[i]);
 	}
 
-	print_graph(&inst);
+	if (TSPopt(&inst) != 0)
+		print_error("Qualcosa e' andato storto!\n");
 
-	/*
-	h_GPC_Plot* plotter;
-	
-	//plotter = gpc_init_xy("Best solution", "X coord", "Y coord",GPC_AUTO_SCALE, GPC_KEY_DISABLE);
-	plotter = gpc_init_xy("solution", (char)*inst.xcoord, (char)*inst.ycoord, GPC_AUTO_SCALE, GPC_KEY_DISABLE);
-
-		
-	//system("gnuplot > pl 'att48.tsp' using 2:3");
-	gpc_close(plotter);
-	*/
-    
-	
 	free_instance(&inst);
+	return 0;
+}
 
-    return 0;
+void free_instance(instance* inst)
+{
+	free(inst->demand);
+	free(inst->xcoord);
+	free(inst->ycoord);
+
 }
 
 void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs detected  
@@ -83,35 +65,38 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 
 	printf("file : %s", inst->input_file);
 
-	FILE* fin = fopen(inst->input_file, "r");
-	if (fin == NULL) print_error(" input file not found!");
+	FILE* fin = NULL;
+	//il compillatore mi rompeva le palle se mettevo la fopen solita, la lascio in commento se dovesse servire
+	if (fopen_s(&fin, inst->input_file, "r") != 0) print_error(" input file not found!");
+
+	//if (fopen(inst->input_file, "r") == NULL) print_error("input file not found!\n");
 
 	inst->nnodes = -1;
 	inst->depot = -1;
 	inst->nveh = -1;
 
 	char line[180];
-	char *par_name;
-	char *token1;
-	char *token2;
+	char* par_name;
+	char* token1;
+	char* token2;
 
 	int do_print = (VERBOSE >= 1000);
 
 	while (fgets(line, sizeof(line), fin) != NULL)
 	{
-			
+
 		if (VERBOSE >= 2000)
-		{ 
+		{
 			printf("%s", line); fflush(NULL);
 		}
 
 		if (strlen(line) <= 1) continue; // skip empty lines
-		
+
 		par_name = strtok(line, " :");
-		
-		if (VERBOSE >= 3000) 
-		{ 
-			printf("parameter \"%s\" ", par_name); fflush(NULL); 
+
+		if (VERBOSE >= 3000)
+		{
+			printf("parameter \"%s\" ", par_name); fflush(NULL);
 		}
 
 		if (strncmp(par_name, "NAME", 4) == 0)
@@ -124,14 +109,14 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 		{
 			active_section = 0;
 			token1 = strtok(NULL, "");
-			if (VERBOSE >= 10) printf(" ... solving instance %s with model %d\n\n", token1, inst->model_type);
+			if (VERBOSE >= 10) printf("\n ... solving instance %s with model %d\n\n", token1, inst->model_type);
 			continue;
 		}
 
 		if (strncmp(par_name, "TYPE", 4) == 0)
 		{
 			token1 = strtok(NULL, " :");
-			if (strncmp(token1, "CVRP", 4) != 0) print_error(" format error:  only TYPE == CVRP implemented so far!!!!!!");
+			if (strncmp(token1, "TSP", 3) != 0) print_error(" format error:  only TYPE == TSP implemented so far!!!!!!");
 			active_section = 0;
 			continue;
 		}
@@ -173,7 +158,8 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 		if (strncmp(par_name, "EDGE_WEIGHT_TYPE", 16) == 0)
 		{
 			token1 = strtok(NULL, " :");
-			if (strncmp(token1, "EUC_2D", 6) != 0) print_error(" format error:  only EDGE_WEIGHT_TYPE == EUC_2D implemented so far!!!!!!");
+			if (strncmp(token1, "TSP", 3
+			) != 0) print_error(" format error:  only EDGE_WEIGHT_TYPE == TSP implemented so far!!!!!!");
 			active_section = 0;
 			continue;
 		}
@@ -192,7 +178,7 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 			break;
 		}
 
-		
+
 		if (active_section == 1) // within NODE_COORD_SECTION
 		{
 			int i = atoi(par_name) - 1;
@@ -233,85 +219,26 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 	fclose(fin);
 }
 
-void print_graph(instance *inst) {
-
-	int SAMPLE_LENGTH = inst->nnodes;
-	
-	printf("\ninizio graph");
-
-	h_GPC_Plot* plotter;
-	plotter = gpc_init_xy("Best solution", "X coord", "Y coord",GPC_AUTO_SCALE, GPC_KEY_DISABLE);
-	
-	if (plotter == NULL)                       // Plot creation failed - e.g is server running ?
-	{
-		printf("\nPlot creation failure. Please ensure gnuplot is located on your system path\n");
-		exit(1);
-	}
-
-	typedef struct // Complex data type
-	{
-		double real;
-		double imag;
-	} ComplexRect_s;
-
-	ComplexRect_s CArray[48];
-
-	for (int j = 0; j < SAMPLE_LENGTH; j++)         // Plot a number of arrays
-	{
-		for (int i = 0; i < SAMPLE_LENGTH; i++)             // Fill the array
-		{
-			CArray[i].real = inst->xcoord[i];
-			CArray[i].imag = inst->ycoord[i];
-		}
-	}
-	//Stampa i punti in rosso		
-		gpc_plot_xy(plotter,                     // Plot handle
-					CArray,                    // Dataset
-					SAMPLE_LENGTH,                 // Number of data points
-					"Data graph",                // Dataset title
-					"point",                  // Plot type
-					"red",                 // Colour
-					GPC_NEW);                 // New plot
-		
-		
-	//Stampa i collegamenti tra i vari punti successivi
-		gpc_plot_xy(plotter,              // Plot handle
-					CArray,                 // Dataset
-					SAMPLE_LENGTH,         // Number of data points
-					"Data graph",            // Dataset title
-					"lines",               // Plot type
-					"blue",         // Colour
-					GPC_ADD); 
-	getchar();
-	
-	gpc_close(plotter);
-
-	printf("\nclose graph");
-	
-	return 0;
-
-}
-
 void parse_command_line(int argc, char** argv, instance* inst)
 {
-	
+
 	if (VERBOSE >= 100)
 	{
 		printf(" running %s with %d parameters \n", argv[0], argc - 1);
 	}
-	 
-	inst->model_type = 0;						// default  
+
+	//inst->model_type = 0;						// default  
 
 	strcpy(inst->input_file, "NULL");
-	
+
 	inst->integer_costs = 0;
 
 	inst->available_memory = 12000;   			// available memory, in MB, for Cplex execution (e.g., 12000)
-	
+
 	inst->max_nodes = -1; 						// max n. of branching nodes in the final run (-1 unlimited)        
 
-	int help = 0; 
-	
+	int help = 0;
+
 	if (argc < 1) help = 1;
 
 	for (int i = 1; i < argc; i++)
@@ -319,7 +246,8 @@ void parse_command_line(int argc, char** argv, instance* inst)
 		if (strcmp(argv[i], "-file") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 			// input file
 		if (strcmp(argv[i], "-input") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 			// input file
 		if (strcmp(argv[i], "-f") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 				// input file
-		
+		if (strcmp(argv[i], "-model") == 0) { inst->model_type = atoi(argv[++i]); continue; } 	        // model type
+
 		help = 1;
 	}
 
@@ -327,15 +255,11 @@ void parse_command_line(int argc, char** argv, instance* inst)
 	{
 		printf("\n\navailable parameters (vers. 16-may-2015) --------------------------------------------------\n");
 		printf("-file %s\n", inst->input_file);
+		printf("-model %d\n", inst->model_type);
 		printf("----------------------------------------------------------------------------------------------\n\n");
 	}
 
 	if (help) exit(1);
-	
+
 
 }
-
-
-
-
-

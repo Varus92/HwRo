@@ -1,26 +1,21 @@
 #ifndef TSP_H
 #define TSP_H
 
-#include <ilcplex/cplex.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> 
-#include<Windows.h>
-
-
+#include <ilcplex/cplex.h>
 
 #define VERBOSE     50
 
-typedef struct 
+typedef struct
 {
     //input data
     int depot;
     int nnodes;
     int nveh;
     double* demand;
-    double *xcoord;
-    double *ycoord;
+    double* xcoord;
+    double* ycoord;
     double capacity;
 
     //parameters
@@ -30,13 +25,19 @@ typedef struct
     int integer_costs;
     char input_file[1000];
     char node_file[1000];
+   
 
     //optimal data
     double x_start;
     double y_start;
+    double u_start;
     double tbest;
-    
+
 }instance;
 
+
+//double dist(int i, int j, instance* inst);
+int TSPopt(instance*);
+void print_error(const char*);
 
 #endif 
