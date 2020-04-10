@@ -37,5 +37,8 @@ typedef struct
 // double dist(int i, int j, instance* inst);
 int TSPopt(instance*);
 void print_error(const char*);
+double dist(int, int, instance*);
+
+int benders_method(double* xstar, int* succ, int* comp, int ncomp, instance* inst, CPXENVptr env, CPXLPptr lp);
 
 #endif 

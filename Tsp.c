@@ -1,6 +1,9 @@
 #include "Tsp.h"
 #include <gnuplot_c.h>
 #include <string.h>
+#include <math.h>
+
+#include "build_model_1.h"
 
 //eps = epsilon
 #define EPS 0.2
@@ -8,21 +11,20 @@
 #pragma warning(disable : 4996)
 
 void build_model(instance* inst, CPXENVptr env, CPXLPptr lp);
-void plot_solution(ComplexRect_s Array[], int size, enum gpcNewAddGraphMode x, h_GPC_Plot*);
 int build_solution(const double* xstar, instance* inst, int* succ, int* comp);
 int* get_component_array(int component, int succ[], int comp[], int size, int *c_component_dim);
 
 double dist(int i, int j, instance* inst)
 {
-    double dx = inst->xcoord[i] - inst->ycoord[j];
+    double dx = inst->xcoord[i] - inst->xcoord[j];
     double dy = inst->ycoord[i] - inst->ycoord[j];
-    
+
     if( !inst->integer_costs)
         return sqrt(dx*dx+dy*dy);
     
     int distance = sqrt(dx*dx+dy*dy + 0.499999); //l'intero piu vicino
 
-    return distance +0.0;
+    return distance+0.0;
 }
 
 int TSPopt(instance* inst) {
@@ -33,6 +35,7 @@ int TSPopt(instance* inst) {
     CPXLPptr lp = CPXcreateprob(env, &error, "TSP");       
 	
     build_model(inst, env, lp);
+	//build_model_1(inst, env, lp);
 
 	//setta parametri per trovare la soluzione ottima
 	if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
@@ -41,8 +44,8 @@ int TSPopt(instance* inst) {
 	plot = gpc_init_xy("TSP solution",
 			"X",
 			"Y",
-			GPC_AUTO_SCALE,
-			GPC_KEY_ENABLE);
+			10000,
+			GPC_KEY_DISABLE);
 
 	int Ncols = CPXgetnumcols(env, lp);
 	double* sol = (double*)calloc(Ncols , sizeof(double));
@@ -56,18 +59,38 @@ int TSPopt(instance* inst) {
 
 	//for (int i = 0; i < inst->nnodes; i++)
 	//	printf("nodo %d nella componente connessa %d e successivo %d\n", i+1, *(comp+i), *(succ+i)+1);
+	Ncomp = benders_method(sol, succ, comp, Ncomp, inst, env, lp);
+	if (Ncomp != 1) print_error("Errore nel benders method\n");
 
 	printf("numero componenti connesse: %d\n", Ncomp);
 
+	//preparo grafico
+	ComplexRect_s* points = (ComplexRect_s*)calloc(inst->nnodes, sizeof(ComplexRect_s));
+
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		points[i].real = inst->xcoord[i];
+		points[i].imag = inst->ycoord[i];
+	}
+
+	gpc_plot_xy(plot,
+		points,
+		inst->nnodes,
+		"X/Y Plot",
+		"points pt 2",
+		"red",
+		GPC_NEW);
+
+	free(points);
 	
-	//conto elementi nelle varie componenti connesse per debuggare
+	//mentre plotto conto elementi nelle varie componenti connesse per debuggare
 	int count = 0;
 	for (int i = 0; i < Ncomp; i++)
 	{
-		int dim;
+		int dim=0;
 		int *Array = get_component_array(i+1, succ, comp, inst->nnodes, &dim);
 		count += dim;
-		ComplexRect_s *coords = (ComplexRect_s*)calloc(dim+1, sizeof(ComplexRect_s));
+		ComplexRect_s *coords = (ComplexRect_s*)calloc(dim + 1.0, sizeof(ComplexRect_s));
 		for (int j = 0; j < dim; j++)
 		{
 			// *(coords + j) = inst->(xcoord+Array[j]), inst->(ycoord + Array[j]) };
@@ -79,9 +102,15 @@ int TSPopt(instance* inst) {
 		coords[dim].imag = inst->ycoord[Array[0]];
 
 		//plot_solution(coords, dim+1, i==0 ? GPC_NEW : GPC_ADD, plot);
-		plot_solution(coords, dim + 1, i == 0 ? GPC_NEW : GPC_NEW, plot);
+		gpc_plot_xy(plot,
+			coords,
+			dim+1,
+			"X/Y Plot",
+			"lines",
+			"blue",
+			GPC_ADD);
 
-		getchar();
+		//getchar();
 
 		free(coords);
 		free(Array);
@@ -107,17 +136,6 @@ void print_error(const char* err)
 	exit(1);
 }
 
-void plot_solution(ComplexRect_s Array[], int size, enum gpcNewAddGraphMode x, h_GPC_Plot *plot)
-{
-	gpc_plot_xy(plot,
-		Array,
-		size,
-		"X/Y Plot",
-		"linespoints pt7 ps 2",
-		"blue",
-		x);
-}
-
 void build_model(instance* inst, CPXENVptr env, CPXLPptr lp) {
 	char binary = 'B';
 	char **cname = (char**)calloc(1, sizeof(char*));		// (char **) required by cplex...
@@ -130,7 +148,9 @@ void build_model(instance* inst, CPXENVptr env, CPXLPptr lp) {
 		for (int j = i + 1; j < inst->nnodes; j++)
 		{
 			sprintf(cname[0], "x(%d,%d)", i + 1, j + 1);
-			double obj = dist(i, j, inst); // cost == distance  
+
+			double obj = dist(i, j, inst); // cost == distance 
+
 			double lb = 0.0;
 			double ub = 1.0;
 			if (CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname)) print_error(" wrong CPXnewcols on x var.s");
@@ -250,7 +270,7 @@ int* get_component_array(int component, int succ[], int comp[], int size, int* c
 	int i;
 	for (i = 0; i < size && comp[i]!=component; i++);
 	
-	if (i == size)	return;		//se viene scandita tutta la soluzione senza trovare la componente connessa desiderata, devo ritornare altrimenti va in loop
+	if (i == size)	return NULL;		//se viene scandita tutta la soluzione senza trovare la componente connessa desiderata, devo ritornare altrimenti va in loop
 
 	int prev = -1, start = i;	//ho dovuto usare una variabile in più altrimenti i cicli di 2 nodi mi fregano
 	while (succ[prev] != start && dim<size)
@@ -263,4 +283,52 @@ int* get_component_array(int component, int succ[], int comp[], int size, int* c
 
 	*c_component_dim = dim;
 	return array;
+}
+
+int benders_method(double* xstar, int* succ, int* comp, int ncomp, instance* inst, CPXENVptr env, CPXLPptr lp)
+{
+	char sense = 'L';
+	char** cname = (char**)malloc(sizeof(char*));
+	cname[0] = (char*)calloc(100, sizeof(char));
+	while (ncomp > 1)
+	{
+		//printf("Sono vivo! Numero componenti connesse: %d\n", ncomp);
+		for (int i = 0; i < ncomp; i++)
+		{
+			sprintf(cname[0], "SEC %d", i+1);
+			// calcolo la dimensione del termine noto del vincolo
+			double rhs = 0.;
+			for (int j = 0 ; j < inst->nnodes ; j++)
+				if (comp[j] == i + 1)
+				{
+					rhs++;
+				}
+			rhs--;
+
+			//aggiungo SEC sulla componente connessa s_i
+			if (CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) print_error("wrong CPXnewrows [u]\n");
+			int lastrow = CPXgetnumrows(env, lp) - 1;
+
+			int dim;
+			int* comp_i = get_component_array(i+1, succ, comp, inst->nnodes, &dim);
+			if (comp_i == NULL)	return -1;
+			// va fatto per ogni coppia appartenente alla componente connessa S_i
+			for(int j = 0; j < dim; j++)
+				for (int jj = j+1; jj < dim; jj++)
+				{
+					if (CPXchgcoef(env, lp, lastrow, xpos(comp_i[j], comp_i[jj], inst), 1.0)) print_error(" wrong CPXchgcoef [SEC]");
+				}
+
+			free(comp_i);
+		}
+		//ricalcolo la soluzione ottima con i nuovi vincoli e chiamo di nuovo build solution
+		CPXwriteprob(env, lp, "model.lp", NULL);
+
+		if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
+		CPXgetx(env, lp, xstar, 0, CPXgetnumcols(env, lp) - 1);
+		ncomp = build_solution(xstar, inst, succ, comp);
+	}
+	free(cname[0]);
+	free(cname);
+	return ncomp;
 }
