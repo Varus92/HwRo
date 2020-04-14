@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "build_model_1.h"
+#include "build_model_2.h"
 
 //eps = epsilon
 #define EPS 0.2
@@ -30,15 +31,30 @@ double dist(int i, int j, instance* inst)
 int TSPopt(instance* inst) {
 	int error = 0;
 	int firstLine = 0;
+	inst->model_type = 2;
 
     CPXENVptr env = CPXopenCPLEX(&error);   //crea l'ambiente per cplex
     CPXLPptr lp = CPXcreateprob(env, &error, "TSP");       
 	
-    build_model(inst, env, lp);
-	//build_model_1(inst, env, lp);
+	switch (inst->model_type)
+	{
+	case 0:
+		build_model(inst, env, lp);
+		break;
+	case 1:
+		build_model_1(inst, env, lp);
+		break;
+	case 2:
+		build_model2(inst, env, lp);
+		break;
+	}
+
+	printf("\nCalcolo soluzione ottima\n");
 
 	//setta parametri per trovare la soluzione ottima
 	if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
+
+	printf("soluzione trovata\n");
 
 	h_GPC_Plot* plot;
 	plot = gpc_init_xy("TSP solution",
@@ -50,7 +66,7 @@ int TSPopt(instance* inst) {
 	int Ncols = CPXgetnumcols(env, lp);
 	double* sol = (double*)calloc(Ncols , sizeof(double));
 	CPXgetx(env, lp, sol, 0, Ncols-1);
-	
+
 	printf("\nprinting solution\n");
 
 	int* succ = (int*)calloc(inst->nnodes, sizeof(int));
@@ -59,8 +75,10 @@ int TSPopt(instance* inst) {
 
 	//for (int i = 0; i < inst->nnodes; i++)
 	//	printf("nodo %d nella componente connessa %d e successivo %d\n", i+1, *(comp+i), *(succ+i)+1);
-	Ncomp = benders_method(sol, succ, comp, Ncomp, inst, env, lp);
-	if (Ncomp != 1) print_error("Errore nel benders method\n");
+	if (inst->model_type == 0) {
+		Ncomp = benders_method(sol, succ, comp, Ncomp, inst, env, lp);
+		if (Ncomp != 1) print_error("Errore nel benders method\n");
+	}
 
 	printf("numero componenti connesse: %d\n", Ncomp);
 
@@ -199,6 +217,18 @@ int xpos(int i, int j, instance* inst) {
 int build_solution(const double* xstar, instance* inst, int* succ, int* comp) // build succ() and comp() wrt xstar()...
 /*********************************************************************************************************************************/
 {
+	//creo un puntatore a funzione per sapere quale xpos utilizzare in base al model type
+	int (*pos)(int, int, instance*);
+	switch (inst->model_type)
+	{
+	case 0: pos = xpos;
+		break;
+	case 1: pos = xxpos;
+		break;
+	case 2: pos = xpos_compact;
+		break;
+	default: pos = xpos;
+	}
 
 #ifdef DEBUG
 	int* degree = (int*)calloc(inst->nnodes, sizeof(int));
@@ -206,7 +236,7 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp) //
 	{
 		for (int j = i + 1; j < inst->nnodes; j++)
 		{
-			int k = xpos(i, j, inst);
+			int k = pos(i, j, inst);
 			if (fabs(xstar[k]) > EPS && fabs(xstar[k] - 1.0) > EPS ) print_error(" wrong xstar in build_sol()");
 			if (xstar[k] > 0.5)
 			{
@@ -245,7 +275,7 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp) //
 			int j;
 			for (j = 0; j < inst->nnodes; j++)
 			{
-				if (i != j && xstar[xpos(i, j, inst)] > 0.5 && comp[j] == -1)
+				if (i != j && xstar[pos(i, j, inst)] > 0.5 && comp[j] == -1)
 				{
 					succ[i] = j;
 					i = j;
@@ -262,6 +292,7 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp) //
 	return ncomp;
 }
 
+//funzione che data una componente connessa component restituisce un array contenenti il subtour di quella componente
 int* get_component_array(int component, int succ[], int comp[], int size, int* c_component_dim) {
 	int dim = 0;
 	int* array = (int*)calloc(size, sizeof(int));

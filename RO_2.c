@@ -15,8 +15,6 @@ void free_instance(instance* inst);
 
 int main(int argc, char** argv)
 {
-	printf("Hello world!\n");
-
 	if (argc < 2)
 	{
 		printf("\nArgomenti passati da input errati: %s \n", argv[0]);
