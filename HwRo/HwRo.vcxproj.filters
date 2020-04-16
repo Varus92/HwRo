@@ -24,10 +24,16 @@
     <ClCompile Include="..\chrono.c">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="..\Tspf.c">
+    <ClCompile Include="..\build_model_1.c">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="..\mainf.c">
+    <ClCompile Include="..\build_model_2.c">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RO_2.c">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Tsp.c">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>
@@ -55,7 +61,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Tspf.h">
+    <ClInclude Include="..\build_model_1.h">
+      <Filter>File di origine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\build_model_2.h">
+      <Filter>File di origine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Tsp.h">
       <Filter>File di origine</Filter>
     </ClInclude>
   </ItemGroup>

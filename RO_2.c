@@ -244,14 +244,16 @@ void parse_command_line(int argc, char** argv, instance* inst)
 		if (strcmp(argv[i], "-file") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 			// input file
 		if (strcmp(argv[i], "-input") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 			// input file
 		if (strcmp(argv[i], "-f") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 				// input file
+		if (strcmp(argv[i], "-model") == 0) { inst->model_type = atoi(argv[++i]); continue; } 	        // model type
 
 		help = 1;
 	}
 
 	if (help || (VERBOSE >= 10))		// print current parameters
 	{
-		printf("\n\navailable parameters (vers. 16-may-2015) --------------------------------------------------\n");
+		printf("\n\navailable parameters --------------------------------------------------\n");
 		printf("-file %s\n", inst->input_file);
+		printf("-model %d\n", inst->model_type);
 		printf("----------------------------------------------------------------------------------------------\n\n");
 	}
 

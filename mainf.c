@@ -3,19 +3,18 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "Tspf.h"
-#include "build_model_2.h"
+#include "Tsp.h"
+
 
 #pragma warning(disable : 4996)
 
-void read_input(instance* inst);
-void parse_command_line(int argc, char** argv, instance* inst);
-void free_instance(instance* inst);
+void read_input(instance* );
+void parse_command_line(int, char** , instance*);
+void free_instance(instance* );
 
 int main(int argc, char** argv)
 {
-	printf("Hello world!\n");
-
+	
 	if (argc < 2)
 	{
 		printf("\nArgomenti passati da input errati: %s \n", argv[0]);
@@ -154,12 +153,10 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 			continue;
 		}
 
-
 		if (strncmp(par_name, "EDGE_WEIGHT_TYPE", 16) == 0)
 		{
 			token1 = strtok(NULL, " :");
-			if (strncmp(token1, "TSP", 3
-			) != 0) print_error(" format error:  only EDGE_WEIGHT_TYPE == TSP implemented so far!!!!!!");
+			if (strncmp(token1, "EUC_2D", 6) != 0) print_error(" format error:  only EDGE_WEIGHT_TYPE == EUC_2D implemented so far!!!!!!");
 			active_section = 0;
 			continue;
 		}
@@ -171,13 +168,11 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 			continue;
 		}
 
-
 		if (strncmp(par_name, "EOF", 3) == 0)
 		{
 			active_section = 0;
 			break;
 		}
-
 
 		if (active_section == 1) // within NODE_COORD_SECTION
 		{
@@ -227,7 +222,7 @@ void parse_command_line(int argc, char** argv, instance* inst)
 		printf(" running %s with %d parameters \n", argv[0], argc - 1);
 	}
 
-	//inst->model_type = 0;						// default  
+	inst->model_type = 0;				// default  model
 
 	strcpy(inst->input_file, "NULL");
 
@@ -253,7 +248,7 @@ void parse_command_line(int argc, char** argv, instance* inst)
 
 	if (help || (VERBOSE >= 10))		// print current parameters
 	{
-		printf("\n\navailable parameters (vers. 16-may-2015) --------------------------------------------------\n");
+		printf("\n\navailable parameters --------------------------------------------------\n");
 		printf("-file %s\n", inst->input_file);
 		printf("-model %d\n", inst->model_type);
 		printf("----------------------------------------------------------------------------------------------\n\n");

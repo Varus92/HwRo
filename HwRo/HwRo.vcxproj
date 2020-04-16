@@ -153,12 +153,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\build_model_1.c" />
+    <ClCompile Include="..\build_model_2.c" />
     <ClCompile Include="..\chrono.c" />
-    <ClCompile Include="..\mainf.c" />
-    <ClCompile Include="..\Tspf.c" />
+    <ClCompile Include="..\RO_2.c" />
+    <ClCompile Include="..\Tsp.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Tspf.h" />
+    <ClInclude Include="..\build_model_1.h" />
+    <ClInclude Include="..\build_model_2.h" />
+    <ClInclude Include="..\Tsp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\LaTex RO2\chapters\introduzione.tex" />
