@@ -30,6 +30,9 @@ typedef struct
     double x_start;
     double y_start;
     double tbest;
+
+    //useful stff
+    int ncols;
     
 }instance;
 
