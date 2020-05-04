@@ -23,16 +23,19 @@ typedef struct
     int model_type;
     int max_nodes;
     int integer_costs;
+    int num_threads;
+    int randomseed;
+    int ncols;
+    double timelimit;						// overall time limit, in sec.s
+    double cutoff; 							// cutoff (upper bound) for master
     char input_file[1000];
     char node_file[1000];
 
     //optimal data
+    double	tstart;
     double x_start;
     double y_start;
     double tbest;
-
-    //useful stff
-    int ncols;
     
 }instance;
 

@@ -230,6 +230,8 @@ void parse_command_line(int argc, char** argv, instance* inst)
 	strcpy(inst->input_file, "NULL");
 
 	inst->integer_costs = 0;
+	
+	inst->timelimit = CPX_INFBOUND;
 
 	inst->available_memory = 12000;   			// available memory, in MB, for Cplex execution (e.g., 12000)
 
@@ -245,6 +247,7 @@ void parse_command_line(int argc, char** argv, instance* inst)
 		if (strcmp(argv[i], "-input") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 			// input file
 		if (strcmp(argv[i], "-f") == 0) { strcpy(inst->input_file, argv[++i]); continue; } 				// input file
 		if (strcmp(argv[i], "-model") == 0) { inst->model_type = atoi(argv[++i]); continue; } 	        // model type
+		if (strcmp(argv[i], "-time_limit") == 0) { inst->timelimit = atof(argv[++i]); continue; }		// total time limit
 
 		help = 1;
 	}
@@ -254,6 +257,7 @@ void parse_command_line(int argc, char** argv, instance* inst)
 		printf("\n\navailable parameters --------------------------------------------------\n");
 		printf("-file %s\n", inst->input_file);
 		printf("-model %d\n", inst->model_type);
+		printf("-time_limit %lf\n", inst->timelimit);
 		printf("----------------------------------------------------------------------------------------------\n\n");
 	}
 
