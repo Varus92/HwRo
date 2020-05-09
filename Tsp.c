@@ -14,36 +14,36 @@
 
 void build_model(instance* inst, CPXENVptr env, CPXLPptr lp);
 int build_solution(const double* xstar, instance* inst, int* succ, int* comp);
-int* get_component_array(int component, int succ[], int comp[], int size, int *c_component_dim);
+int* get_component_array(int component, int succ[], int comp[], int size, int* c_component_dim);
 static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* data);
 static int add_secs(instance* inst, int* xstar, CPXCALLBACKCONTEXTptr context);
-double second();
+double second() { return 0.; }
 
 
 double dist(int i, int j, instance* inst)
 {
-    double dx = inst->xcoord[i] - inst->xcoord[j];
-    double dy = inst->ycoord[i] - inst->ycoord[j];
+	double dx = inst->xcoord[i] - inst->xcoord[j];
+	double dy = inst->ycoord[i] - inst->ycoord[j];
 
-    if( !inst->integer_costs)
-        return sqrt(dx*dx+dy*dy);
-    
-    int distance = sqrt(dx*dx+dy*dy + 0.499999); //l'intero piu vicino
+	if (!inst->integer_costs)
+		return sqrt(dx * dx + dy * dy);
 
-    return distance+0.0;
+	int distance = sqrt(dx * dx + dy * dy + 0.499999); //l'intero piu vicino
+
+	return distance + 0.0;
 }
 
 int TSPopt(instance* inst) {
 	inst->tstart = second();
-	
-	
+
+
 	int error = 0;
 	int firstLine = 0;
-	//inst->model_type = 2;
+	inst->model_type = 0;
 
-    CPXENVptr env = CPXopenCPLEX(&error);   //crea l'ambiente per cplex
-    CPXLPptr lp = CPXcreateprob(env, &error, "TSP");   
-	
+	CPXENVptr env = CPXopenCPLEX(&error);   //crea l'ambiente per cplex
+	CPXLPptr lp = CPXcreateprob(env, &error, "TSP");
+
 	switch (inst->model_type)
 	{
 	case 0:
@@ -60,50 +60,49 @@ int TSPopt(instance* inst) {
 	printf("\nCalcolo soluzione ottima\n");
 
 	//setta parametri per trovare la soluzione ottima
-	
+
 		//setto callback
-	int callback =1;
+	int callback = 1;
 	if (callback == 1)
 	{
 		// cplex output
 		//CPXsetintparam(env, CPX_PARAM_MIPDISPLAY, 4);						// MIP node display info
 		CPXsetintparam(env, CPX_PARAM_MIPCBREDLP, CPX_OFF);
-				
-		
 
+		inst->ncols = CPXgetnumcols(env, lp);
+		
 		if (CPXcallbacksetfunc(env, lp, CPX_CALLBACKCONTEXT_CANDIDATE, my_callback, inst)) print_error("errore nel set della callback");
 
 		// riattivo il multithreading che cplex di default disattiva quando l'utente setta una callback sua
-		int ncores= 1;
+		int ncores = 1;
 		CPXgetnumcores(env, &ncores);
 		CPXsetintparam(env, CPX_PARAM_THREADS, ncores);
-		inst->ncols = CPXgetnumcols(env, lp);
+		
 	}
 
 	//risolve
-		
 	if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
 
 	printf("soluzione trovata\n");
 
 	h_GPC_Plot* plot;
 	plot = gpc_init_xy("TSP solution",
-			"X",
-			"Y",
-			10000,
-			GPC_KEY_DISABLE);
+		"X",
+		"Y",
+		10000,
+		GPC_KEY_DISABLE);
 
 	int Ncols = CPXgetnumcols(env, lp);
-	double* sol = (double*)calloc(Ncols , sizeof(double));
-	CPXgetx(env, lp, sol, 0, Ncols-1);
+	double* sol = (double*)calloc(Ncols, sizeof(double));
+	CPXgetx(env, lp, sol, 0, Ncols - 1);
 
-	printf("\n printing solution\n");
+	//printf("\n printing solution\n");
 
 	int* succ = (int*)calloc(inst->nnodes, sizeof(int));
 	int* comp = (int*)calloc(inst->nnodes, sizeof(int));
 	int Ncomp = build_solution(sol, inst, succ, comp);
 
-	
+	printf("%d\n", Ncomp);
 	if (Ncomp == 1)
 		printf("Soluzione trovata, non e' necessario procedere con il LOOP\n");
 	else
@@ -115,6 +114,8 @@ int TSPopt(instance* inst) {
 
 	printf("numero componenti connesse: %d\n", Ncomp);
 
+	//return 0;
+	
 	//preparo grafico
 	ComplexRect_s* points = (ComplexRect_s*)calloc(inst->nnodes, sizeof(ComplexRect_s));
 
@@ -133,15 +134,15 @@ int TSPopt(instance* inst) {
 		GPC_NEW);
 
 	free(points);
-	
+
 	//mentre plotto conto elementi nelle varie componenti connesse per debuggare
 	int count = 0;
 	for (int i = 0; i < Ncomp; i++)
 	{
-		int dim=0;
-		int *Array = get_component_array(i+1, succ, comp, inst->nnodes, &dim);
+		int dim = 0;
+		int* Array = get_component_array(i + 1, succ, comp, inst->nnodes, &dim);
 		count += dim;
-		ComplexRect_s *coords = (ComplexRect_s*)calloc(dim + 1.0, sizeof(ComplexRect_s));
+		ComplexRect_s* coords = (ComplexRect_s*)calloc(dim + 1.0, sizeof(ComplexRect_s));
 		for (int j = 0; j < dim; j++)
 		{
 			// *(coords + j) = inst->(xcoord+Array[j]), inst->(ycoord + Array[j]) };
@@ -155,7 +156,7 @@ int TSPopt(instance* inst) {
 		//plot_solution(coords, dim+1, i==0 ? GPC_NEW : GPC_ADD, plot);
 		gpc_plot_xy(plot,
 			coords,
-			dim+1,
+			dim + 1,
 			"X/Y Plot",
 			"lines",
 			"blue",
@@ -171,13 +172,13 @@ int TSPopt(instance* inst) {
 	getchar();
 	gpc_close(plot);
 
-    //effettua i free per evitare memory leak, alcuni sono richiesti da cplex
+	//effettua i free per evitare memory leak, alcuni sono richiesti da cplex
 	free(sol);
 	free(succ);
 	free(comp);
-    CPXfreeprob(env, &lp);
-    CPXcloseCPLEX(&env);
-    return error;
+	CPXfreeprob(env, &lp);
+	CPXcloseCPLEX(&env);
+	return error;
 
 }
 
@@ -189,9 +190,9 @@ void print_error(const char* err)
 }
 
 void build_model(instance* inst, CPXENVptr env, CPXLPptr lp) {
-	
+
 	char binary = 'B';
-	char **cname = (char**)calloc(1, sizeof(char*));		// (char **) required by cplex...
+	char** cname = (char**)calloc(1, sizeof(char*));		// (char **) required by cplex...
 	*cname = (char*)calloc(100, sizeof(char));
 
 	// aggiunta colonne
@@ -218,7 +219,7 @@ void build_model(instance* inst, CPXENVptr env, CPXLPptr lp) {
 		int lastrow = CPXgetnumrows(env, lp);
 		double rhs = 2.0;
 		char sense = 'E';                            // 'E' for equality constraint 
-		sprintf_s(cname[0],VERBOSE, "degree(%d)", h + 1);
+		sprintf_s(cname[0], VERBOSE, "degree(%d)", h + 1);
 		// inserisco il termine noto rhs (sommatoria di archi per ogni riga deve essere uguale a due nel nostro caso)
 		if (CPXnewrows(env, lp, 1, &rhs, &sense, NULL, cname)) print_error(" wrong CPXnewrows [degree]");
 		for (int i = 0; i < inst->nnodes; i++)
@@ -240,10 +241,10 @@ void build_model(instance* inst, CPXENVptr env, CPXLPptr lp) {
 // trattiamo il TSP nella versione con grafi NON orientati, prendiamo quindi la triangolare superiore (tuttavia xpos restituisce
 // il numero dell'arco anche se chiediamo l'indice dell'arco nella posizione simmetrica sfruttando appunto la simmetria del problema)
 int xpos(int i, int j, instance* inst) {
-    if (i == j) print_error(" i == j in xpos");
-    if (i > j) return xpos(j, i, inst);
-    int pos = i * inst->nnodes + j - ((i + 1) * (i + 2)) / 2;
-    return pos;
+	if (i == j) print_error(" i == j in xpos");
+	if (i > j) return xpos(j, i, inst);
+	int pos = i * inst->nnodes + j - ((i + 1) * (i + 2)) / 2;
+	return pos;
 }
 // ricapitolando: X_ij nel nostro modello viene codificata in cplex come X_{xpos(i,j, inst)}
 
@@ -272,7 +273,7 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp) //
 		for (int j = i + 1; j < inst->nnodes; j++)
 		{
 			int k = pos(i, j, inst);
-			if (fabs(xstar[k]) > EPS && fabs(xstar[k] - 1.0) > EPS ) print_error(" wrong xstar in build_sol()");
+			if (fabs(xstar[k]) > EPS && fabs(xstar[k] - 1.0) > EPS) print_error(" wrong xstar in build_sol()");
 			if (xstar[k] > 0.5)
 			{
 				++degree[i];
@@ -283,12 +284,12 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp) //
 	for (int i = 0; i < inst->nnodes; i++)
 	{
 		char s[100];
-		sprintf(s, "wrong degree in build_sol(), error at node %d",i+1);
+		sprintf(s, "wrong degree in build_sol(), error at node %d", i + 1);
 		if (degree[i] != 2) print_error(s);
 	}
 	free(degree);
 #endif
-	
+
 	int ncomp = 0;
 	for (int i = 0; i < inst->nnodes; i++)
 	{
@@ -331,15 +332,15 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp) //
 int* get_component_array(int component, int succ[], int comp[], int size, int* c_component_dim) {
 	int dim = 0;
 	int* array = (int*)calloc(size, sizeof(int));
-	
+
 	//find first node
 	int i;
-	for (i = 0; i < size && comp[i]!=component; i++);
-	
+	for (i = 0; i < size && comp[i] != component; i++);
+
 	if (i == size)	return NULL;		//se viene scandita tutta la soluzione senza trovare la componente connessa desiderata, devo ritornare altrimenti va in loop
 
 	int prev = -1, start = i;	//ho dovuto usare una variabile in più altrimenti i cicli di 2 nodi mi fregano
-	while (succ[prev] != start && dim<size)
+	while (succ[prev] != start && dim < size)
 	{
 		prev = i;
 		*(array + dim) = prev;
@@ -361,10 +362,10 @@ int benders_method(double* xstar, int* succ, int* comp, int ncomp, instance* ins
 		//printf("Sono vivo! Numero componenti connesse: %d\n", ncomp);
 		for (int i = 0; i < ncomp; i++)
 		{
-			sprintf(cname[0], "SEC %d", i+1);
+			sprintf(cname[0], "SEC %d", i + 1);
 			// calcolo la dimensione del termine noto del vincolo
 			double rhs = 0.;
-			for (int j = 0 ; j < inst->nnodes ; j++)
+			for (int j = 0; j < inst->nnodes; j++)
 				if (comp[j] == i + 1)
 				{
 					rhs++;
@@ -376,11 +377,11 @@ int benders_method(double* xstar, int* succ, int* comp, int ncomp, instance* ins
 			int lastrow = CPXgetnumrows(env, lp) - 1;
 
 			int dim;
-			int* comp_i = get_component_array(i+1, succ, comp, inst->nnodes, &dim);
+			int* comp_i = get_component_array(i + 1, succ, comp, inst->nnodes, &dim);
 			if (comp_i == NULL)	return -1;
 			// va fatto per ogni coppia appartenente alla componente connessa S_i
-			for(int j = 0; j < dim; j++)
-				for (int jj = j+1; jj < dim; jj++)
+			for (int j = 0; j < dim; j++)
+				for (int jj = j + 1; jj < dim; jj++)
 				{
 					if (CPXchgcoef(env, lp, lastrow, xpos(comp_i[j], comp_i[jj], inst), 1.0)) print_error(" wrong CPXchgcoef [SEC]");
 				}
@@ -414,20 +415,17 @@ int time_limit_expired(instance* inst)
 
 static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* data)
 {
-	
-	printf("callback chiamata\n");
-
 	instance* inst = (instance*)data;
-	
+
 	// get solution xstar
 	double* xstar = (double*)calloc(inst->ncols, sizeof(double));
-	
+
 	// get some random information at the node (as an example)
 	double objval = CPX_INFBOUND + 0.0;
 
 	if (CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval)) return 1; // xstar = current x from CPLEX-- xstar starts from position 0
 
-	int mythread = -1;  
+	int mythread = -1;
 	CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADS, &mythread);
 	double zbest;
 	CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &zbest);
@@ -436,48 +434,40 @@ static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
 	int ncuts = add_secs(inst, xstar, context);
 
 	free(xstar);
-	return 0;						
+	return 0;
 }
 
 
 static int add_secs(instance* inst, int* xstar, CPXCALLBACKCONTEXTptr context)
 {
-	
+
 	int* succ = (int*)calloc(inst->nnodes, sizeof(int));
 	int* comp = (int*)calloc(inst->nnodes, sizeof(int));
-	int* ncomp = (int*)calloc(1, sizeof(int));
-	build_solution(xstar, inst, succ, comp, ncomp);
-	
+	int ncomp = build_solution(xstar, inst, succ, comp);
 
-	for (int i = 0; *ncomp > 1 && i <= *ncomp; i++)
+	for (int i = 0; ncomp > 1 && i < ncomp; i++)
 	{
 		int count_nodes = 0;
-		char** cname = (char**)malloc(sizeof(char*));
-		cname[0] = (char*)calloc(100, sizeof(char));
-		sprintf(cname[0], "SEC %d", i + 1);
 
-		int* comp_nodes = (int*)calloc(inst->nnodes, sizeof(int));
+		int* comp_nodes;
 
 		// calcolo la dimensione del termine noto del vincolo
+		comp_nodes = get_component_array(i + 1, succ, comp, inst->nnodes, &count_nodes);
 
-		for (int j = 0; j < inst->nnodes; j++){
-			if (comp[j] == i + 1)
-			{
-				comp_nodes[count_nodes++] = j;
-			}
-		}
 		int zero = 0;
-		int* indexes = (int*)calloc(count_nodes * count_nodes, sizeof(int));
-		double* values = (double*)calloc(count_nodes * count_nodes, sizeof(double));
+
+		int n_edges = (count_nodes * (count_nodes - 1)) / 2;
+		int* indexes = (int*)calloc(n_edges, sizeof(int));
+		double* values = (double*)calloc(n_edges, sizeof(double));
 		int start_indexes = 0;
 
 		double rhs = count_nodes - 1.0;
 		char sense = 'L';
-		int nnz = 0; //number of non-zero coefficient
+		int nnz = 0; //number of non-zero coefficients
 
 		// ottengo la componente connessa S_i, costruisco il vettore di indici degli elementi in S_i e attribuisco valore 1
-		
-		for (int j = 0; j < count_nodes-1; j++)
+
+		for (int j = 0; j < count_nodes - 1; j++)
 			for (int jj = j + 1; jj < count_nodes; jj++)
 			{
 				indexes[nnz] = xpos(comp_nodes[j], comp_nodes[jj], inst);
@@ -486,13 +476,14 @@ static int add_secs(instance* inst, int* xstar, CPXCALLBACKCONTEXTptr context)
 			}
 
 		if (CPXcallbackrejectcandidate(context, 1, nnz, &rhs, &sense, &start_indexes, indexes, values)) print_error("Errore nell'aggiunta dei sec nella callback");
-		
+
 		free(indexes);
 		free(values);
+		free(comp_nodes);
 	}
 
 	free(comp);
 	free(succ);
-	
-}
 
+	return ncomp == 1 ? 0 : ncomp;
+}
