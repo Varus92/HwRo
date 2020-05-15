@@ -6,6 +6,7 @@
 
 #include "build_model_1.h"
 #include "build_model_2.h"
+#include "Mat_euristics.h"
 
 //eps = epsilon
 #define EPS 0.2
@@ -17,7 +18,9 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp);
 int* get_component_array(int component, int succ[], int comp[], int size, int* c_component_dim);
 static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* data);
 static int add_secs(instance* inst, int* xstar, CPXCALLBACKCONTEXTptr context);
-double second() { return 0.; }
+
+// required by time.h
+double second();
 
 
 double dist(int i, int j, instance* inst)
@@ -32,6 +35,7 @@ double dist(int i, int j, instance* inst)
 
 	return distance + 0.0;
 }
+
 
 int TSPopt(instance* inst) {
 	inst->tstart = second();
@@ -49,6 +53,7 @@ int TSPopt(instance* inst) {
 	case 0:
 		build_model(inst, env, lp);
 		break;
+
 	case 1:
 		build_model_1(inst, env, lp);
 		break;
@@ -79,19 +84,52 @@ int TSPopt(instance* inst) {
 		CPXsetintparam(env, CPX_PARAM_THREADS, ncores);
 		
 	}
+	
+	int use_euristic = 1; // 1 hard fixing, 0 niente, 2 local branching
+	double temp_objval = CPX_INFBOUND, tstart = second();
+	if (use_euristic == 1)
+	{
+		//launch cplex with a time limit and get incumbent
 
-	//risolve
-	if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
+		CPXsetdblparam(env, CPX_PARAM_TILIM, 2); 							// real time
+		//CPXsetdblparam(env, CPX_PARAM_DETTILIM, TICKS_PER_SECOND * timelimit);
 
-	printf("soluzione trovata\n");
+		if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
 
-	h_GPC_Plot* plot;
-	plot = gpc_init_xy("TSP solution",
-		"X",
-		"Y",
-		10000,
-		GPC_KEY_DISABLE);
+		printf("secondi passati: %f\n", second() - tstart);
+		printf("inizio %f fine %f\n", second(), tstart);
 
+		double percentages[] = { 0.9, 0.75, 0.5, 0.15 };
+		for (int i = 0; i < 4; i++)
+		{
+			int Ncols = CPXgetnumcols(env, lp);
+			double* sol = (double*)calloc(Ncols, sizeof(double));
+			CPXgetx(env, lp, sol, 0, Ncols - 1);
+
+			int* succ = (int*)calloc(inst->nnodes, sizeof(int));
+			int* comp = (int*)calloc(inst->nnodes, sizeof(int));
+			int Ncomp = build_solution(sol, inst, succ, comp);
+
+			printf("number of connected components: %d\n", Ncomp);
+
+			printf("debug 1\n");
+			int* circuit_partial = get_circuit(inst, comp, succ);
+
+			printf("debug 2\n");
+			fix(circuit_partial, inst->nnodes, percentages[i], inst, env, lp);
+
+			printf("debug 3\n");
+			CPXsetdblparam(env, CPX_PARAM_TILIM, 2);
+			if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
+
+			free(circuit_partial);
+		}
+	}
+	else
+	{
+		//risolve
+		if (CPXmipopt(env, lp) != 0) print_error("Errore nella chiamata di mipopt");
+	}
 	int Ncols = CPXgetnumcols(env, lp);
 	double* sol = (double*)calloc(Ncols, sizeof(double));
 	CPXgetx(env, lp, sol, 0, Ncols - 1);
@@ -101,7 +139,18 @@ int TSPopt(instance* inst) {
 	int* succ = (int*)calloc(inst->nnodes, sizeof(int));
 	int* comp = (int*)calloc(inst->nnodes, sizeof(int));
 	int Ncomp = build_solution(sol, inst, succ, comp);
+	
+	printf("soluzione trovata\n");
 
+
+	h_GPC_Plot* plot;
+	plot = gpc_init_xy("TSP solution",
+		"X",
+		"Y",
+		GPC_AUTO_SCALE,
+		GPC_KEY_DISABLE);
+
+	
 	printf("%d\n", Ncomp);
 	if (Ncomp == 1)
 		printf("Soluzione trovata, non e' necessario procedere con il LOOP\n");
@@ -113,8 +162,6 @@ int TSPopt(instance* inst) {
 		}
 
 	printf("numero componenti connesse: %d\n", Ncomp);
-
-	//return 0;
 	
 	//preparo grafico
 	ComplexRect_s* points = (ComplexRect_s*)calloc(inst->nnodes, sizeof(ComplexRect_s));
@@ -248,14 +295,10 @@ int xpos(int i, int j, instance* inst) {
 }
 // ricapitolando: X_ij nel nostro modello viene codificata in cplex come X_{xpos(i,j, inst)}
 
-//#define DEBUG 
-
-int build_solution(const double* xstar, instance* inst, int* succ, int* comp) // build succ() and comp() wrt xstar()...
-/*********************************************************************************************************************************/
+void* get_xpos(int model_type)
 {
-	//creo un puntatore a funzione per sapere quale xpos utilizzare in base al model type
 	int (*pos)(int, int, instance*);
-	switch (inst->model_type)
+	switch (model_type)
 	{
 	case 0: pos = xpos;
 		break;
@@ -265,6 +308,26 @@ int build_solution(const double* xstar, instance* inst, int* succ, int* comp) //
 		break;
 	default: pos = xpos;
 	}
+	return pos;
+}
+
+//#define DEBUG 
+int build_solution(const double* xstar, instance* inst, int* succ, int* comp) // build succ() and comp() wrt xstar()...
+/*********************************************************************************************************************************/
+{
+	//creo un puntatore a funzione per sapere quale xpos utilizzare in base al model type
+	int (*pos)(int, int, instance*);
+	/*switch (inst->model_type)
+	{
+	case 0: pos = xpos;
+		break;
+	case 1: pos = xxpos;
+		break;
+	case 2: pos = xpos_compact;
+		break;
+	default: pos = xpos;
+	}*/
+	pos = get_xpos(inst->model_type);
 
 #ifdef DEBUG
 	int* degree = (int*)calloc(inst->nnodes, sizeof(int));
@@ -411,7 +474,6 @@ int time_limit_expired(instance* inst)
 	}
 	return 0;
 }
-
 
 static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* data)
 {

@@ -1,7 +1,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-
 #if defined(__MACH__) && defined(__APPLE__)
 #include <mach/mach.h>
 #include <mach/mach_time.h>
@@ -19,8 +18,9 @@ double myWallTime()
 	}
 	return mach_absolute_time() * timeConvert;
 #else
-	
-	return 0.0;
+	clock_t c;
+	c = clock();
+	return (double)c / CLOCKS_PER_SEC;
 #endif // __APPLE__
 }
 
