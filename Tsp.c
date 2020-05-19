@@ -7,6 +7,7 @@
 #include "build_model_1.h"
 #include "build_model_2.h"
 #include "Mat_euristics.h"
+#include "Grasp.h"
 
 //eps = epsilon
 #define EPS 0.2
@@ -38,12 +39,12 @@ double dist(int i, int j, instance* inst)
 
 
 int TSPopt(instance* inst) {
-	inst->tstart = second();
+	//inst->tstart = second();
 
 
 	int error = 0;
 	int firstLine = 0;
-	inst->model_type = 0;
+	inst->model_type = 3;
 
 	CPXENVptr env = CPXopenCPLEX(&error);   //crea l'ambiente per cplex
 	CPXLPptr lp = CPXcreateprob(env, &error, "TSP");
@@ -60,6 +61,8 @@ int TSPopt(instance* inst) {
 	case 2:
 		build_model2(inst, env, lp);
 		break;
+	case 3:
+		heuristicSolver(inst);
 	}
 
 	printf("\nCalcolo soluzione ottima\n");
@@ -67,7 +70,7 @@ int TSPopt(instance* inst) {
 	//setta parametri per trovare la soluzione ottima
 
 		//setto callback
-	int callback = 1;
+	int callback = 0;
 	if (callback == 1)
 	{
 		// cplex output
@@ -85,7 +88,7 @@ int TSPopt(instance* inst) {
 		
 	}
 	
-	int use_euristic = 1; // 1 hard fixing, 0 niente, 2 local branching
+	int use_euristic = 0; // 1 hard fixing, 0 niente, 2 local branching
 	double temp_objval = CPX_INFBOUND, tstart = second();
 	if (use_euristic == 1)
 	{
