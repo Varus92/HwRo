@@ -7,6 +7,7 @@
 #include "build_model_1.h"
 #include "build_model_2.h"
 #include "Mat_euristics.h"
+#include "Heuristics.h"
 #include "Grasp.h"
 
 //eps = epsilon
@@ -15,7 +16,6 @@
 #pragma warning(disable : 4996)
 
 void build_model(instance* inst, CPXENVptr env, CPXLPptr lp);
-int build_solution(const double* xstar, instance* inst, int* succ, int* comp);
 int* get_component_array(int component, int succ[], int comp[], int size, int* c_component_dim);
 static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* data);
 static int add_secs(instance* inst, int* xstar, CPXCALLBACKCONTEXTptr context);
@@ -39,12 +39,12 @@ double dist(int i, int j, instance* inst)
 
 
 int TSPopt(instance* inst) {
-	//inst->tstart = second();
+	inst->tstart = second();
 
 
 	int error = 0;
 	int firstLine = 0;
-	inst->model_type = 3;
+	inst->model_type = 0;
 
 	CPXENVptr env = CPXopenCPLEX(&error);   //crea l'ambiente per cplex
 	CPXLPptr lp = CPXcreateprob(env, &error, "TSP");
@@ -63,6 +63,7 @@ int TSPopt(instance* inst) {
 		break;
 	case 3:
 		heuristicSolver(inst);
+		break;
 	}
 
 	printf("\nCalcolo soluzione ottima\n");
@@ -70,7 +71,7 @@ int TSPopt(instance* inst) {
 	//setta parametri per trovare la soluzione ottima
 
 		//setto callback
-	int callback = 0;
+	int callback = 1;
 	if (callback == 1)
 	{
 		// cplex output
@@ -88,7 +89,7 @@ int TSPopt(instance* inst) {
 		
 	}
 	
-	int use_euristic = 0; // 1 hard fixing, 0 niente, 2 local branching
+	int use_euristic = 1; // 1 hard fixing, 0 niente, 2 local branching
 	double temp_objval = CPX_INFBOUND, tstart = second();
 	if (use_euristic == 1)
 	{
@@ -501,7 +502,6 @@ static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
 	free(xstar);
 	return 0;
 }
-
 
 static int add_secs(instance* inst, int* xstar, CPXCALLBACKCONTEXTptr context)
 {

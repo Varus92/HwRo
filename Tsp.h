@@ -38,8 +38,6 @@ typedef struct
     double tbest;
     int best_lb;
 
-   
-
 } instance;
 
 
@@ -49,6 +47,7 @@ double dist(int, int, instance*);
 void* get_xpos(int model_type);
 int benders_method(double* xstar, int* succ, int* comp, int ncomp, instance* inst, CPXENVptr env, CPXLPptr lp);
 int* get_component_array(int component, int succ[], int comp[], int size, int* c_component_dim);
+int build_solution(const double* xstar, instance* inst, int* succ, int* comp);
 int time_limit_expired(instance* inst);
 
 #endif 

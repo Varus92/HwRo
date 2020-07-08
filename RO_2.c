@@ -1,4 +1,4 @@
-// RO_2.cpp : Questo file contiene la funzione 'main', in cui inizia e termina l'esecuzione del programma.
+// RO_2.c : Questo file contiene la funzione 'main', in cui inizia e termina l'esecuzione del programma.
 //
 
 #include <stdlib.h>
@@ -6,15 +6,18 @@
 #include <string.h>
 
 #include "Tsp.h"
+#include "Heuristics.h"
 
 #pragma warning(disable : 4996)
 
-void read_input(instance * inst);
+void read_input(instance* inst);
 void parse_command_line(int argc, char** argv, instance* inst);
 void free_instance(instance* inst);
+void test_swap(instance*);
 
 int main(int argc, char** argv)
 {
+#if 1
 	if (argc < 2)
 	{
 		printf("\nArgomenti passati da input errati: %s \n", argv[0]);
@@ -42,12 +45,45 @@ int main(int argc, char** argv)
 		printf("x=%15.7lf - ", inst.xcoord[i]);
 		printf("y=%15.7lf", inst.ycoord[i]);
 	}
-	
+	printf("\n");
+
 	if (TSPopt(&inst) != 0)
 		print_error("Qualcosa e' andato storto!\n");
-		
+
+	//test_swap(&inst);
+
+	//variable_neighborhood_search(&inst, 60);
+
 	free_instance(&inst);
 	return 0;
+
+
+#else
+	for (int i = 0; i < 10; i++) {
+		double drawn_n = (0. + rand()) / RAND_MAX;
+		printf("%f\n", drawn_n);
+	}
+
+#endif
+}
+
+void test_swap(instance* inst)
+{
+	int* old_circuit, * new_circuit;
+	old_circuit = (int*)calloc(inst->nnodes, sizeof(int));
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		old_circuit[i] = i;
+	}
+	int a, b, c, d;
+	a = 3; b = 4; c = 29; d = 30;
+	
+	new_circuit = swap_2opt(inst, old_circuit, a, b, c, d);
+	
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		printf("%d\n", new_circuit[i]);
+	}
 }
 
 void free_instance(instance* inst)
@@ -66,7 +102,7 @@ void read_input(instance* inst) // simplified CVRP parser, not all SECTIONs dete
 
 	FILE* fin = NULL;
 	//il compillatore mi rompeva le palle se mettevo la fopen solita, la lascio in commento se dovesse servire
-	if (fopen_s(&fin,inst->input_file, "r") != 0) print_error(" input file not found!");
+	if (fopen_s(&fin, inst->input_file, "r") != 0) print_error(" input file not found!");
 
 	//if (fopen(inst->input_file, "r") == NULL) print_error("input file not found!\n");
 
@@ -230,7 +266,7 @@ void parse_command_line(int argc, char** argv, instance* inst)
 	strcpy(inst->input_file, "NULL");
 
 	inst->integer_costs = 0;
-	
+
 	inst->timelimit = CPX_INFBOUND;
 
 	inst->available_memory = 12000;   			// available memory, in MB, for Cplex execution (e.g., 12000)

@@ -1,5 +1,4 @@
-
-#include "Tsp.h";
+#include "Tsp.h"
 
 void build_model2(instance* inst, CPXENVptr env, CPXLPptr lp);
 
